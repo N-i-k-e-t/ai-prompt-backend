@@ -1,21 +1,32 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-async function generatePromptText(categoryName) {
-  // Replace with Groq or OpenAI API call
-  return `Example prompt for ${categoryName}`;
-}
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Only POST allowed' });
-
-  const { data: categories } = await supabase.from('categories').select();
-
-  for (const cat of categories) {
-    const text = await generatePromptText(cat.name);
-    await supabase.from('prompts').insert([{ text, category_id: cat.id }]);
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  return res.status(200).json({ success: true });
+  // Example: Generate one prompt per category
+  const { data: categories, error } = await supabase.from('categories').select('*');
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  const prompts = categories.map(c => ({
+    category_id: c.id,
+    prompt_text: `Write a unique prompt for ${c.name}`,
+  }));
+
+  const { error: insertError } = await supabase
+    .from('prompts')
+    .insert(prompts);
+
+  if (insertError) {
+    return res.status(500).json({ error: insertError.message });
+  }
+
+  res.status(200).json({ message: 'Prompts generated' });
 }
+//
