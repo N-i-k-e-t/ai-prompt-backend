@@ -5,18 +5,45 @@ import CategoryList from '@/components/Admin/CategoryList';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/admin/get-categories');
+      const data = await res.json();
+      if (res.ok) {
+        setCategories(data.data || []);
+      } else {
+        console.error(data.error || 'Failed to fetch categories');
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch('/api/admin/get-categories')
-      .then(res => res.json())
-      .then(data => setCategories(data.data || []));
+    fetchCategories();
   }, []);
+
+  const handleAddCategory = (newCat) => {
+    setCategories(prev => [...prev, newCat]);
+  };
 
   return (
     <AdminLayout>
-      <h1 className="text-xl font-bold mb-4">Manage Categories</h1>
-      <CategoryForm onAdd={cat => setCategories([...categories, cat])} />
-      <CategoryList categories={categories} />
+      <div className="p-4 bg-white rounded shadow">
+        <h1 className="text-xl font-bold mb-4">Manage Categories</h1>
+
+        <CategoryForm onAdd={handleAddCategory} />
+
+        {loading ? (
+          <p className="text-gray-500">Loading categories...</p>
+        ) : (
+          <CategoryList categories={categories} />
+        )}
+      </div>
     </AdminLayout>
   );
 }

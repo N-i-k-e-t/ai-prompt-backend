@@ -1,12 +1,8 @@
-import Sidebar from './Sidebar';
-
 export default function AdminLayout({ children }) {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-4 bg-gray-50">
-        {children}
-      </main>
+    <div className="min-h-screen p-4 bg-gray-50">
+      <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
+      {children}
     </div>
   );
 }
